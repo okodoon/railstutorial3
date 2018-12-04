@@ -10,20 +10,24 @@ class User < ApplicationRecord
   validates :password, presence: true, 
     length: { minimum: 6 }, allow_nil: true
 
+  #渡された文字列のハッシュを返すよ
+  #パスワードを入力すると暗号化された文字列を生成してくれる。
   def User.digest(string)
     cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST :
                                                   BCrypt::Engine.cost
     BCrypt::Password.create(string, cost: cost)
   end
 
+  #ランダムなトークンを返すよ
   def User.new_token
     SecureRandom.urlsafe_base64
   end
 
+  #一度remember_tokenという奴に代入、remember_tokenはattr_accessorでUserモデルと #紐づいて定義されている。selfは今のユーザー #そのユーザーのremember_digestカラムの中にremember_tokenをdigestにしたものを入れて上書き
+
   def remember
     self.remember_token = User.new_token
-    self.update_attribute(:remember_digest,
-      User.digest(remember_token))
+    self.update_attribute(:remember_digest, User.digest(remember_token))
   end
   
   def forget
