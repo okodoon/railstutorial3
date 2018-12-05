@@ -1,0 +1,268 @@
+" setting
+" 文字コードをUTF-8に設定
+set fenc=utf-8
+" バックアップファイルを作らない
+set nobackup
+" スワップファイルを作らない
+set noswapfile
+" 編集中のファイルが変更されたら自動で読み直す
+set autoread
+" バッファが編集中でもその他のファイルを開けるように
+set hidden
+" 入力中のコマンドをステータスに表示する
+set showcmd
+" インクリメンタル検索にする
+set incsearch
+""以下の設定をすることでマウスでカーソル移動やスクロール移動が出来る
+if has('mouse')
+    set mouse=a
+    if has('mouse_sgr')
+        set ttymouse=sgr
+    elseif v:version > 703 || v:version is 703 && has('patch632')
+        set ttymouse=sgr
+    else
+        set ttymouse=xterm2
+    endif
+endif
+"カーソルの左右移動で行末から次の行の行頭まで移動"
+set whichwrap=b,s,h,l,<,>,[,],~
+"バックスペースキーの有効化"
+set backspace=indent,eol,start
+
+"クリップボードから普通にペーストすると自動インデントが効いて下に行くほど右にずれていきますが、 以下の設定をすることで、クリップボードからペーストする時だけインデントしないようにしてくれます。
+if &term =~ "xterm"
+    let &t_SI .= "\e[?2004h"
+    let &t_EI .= "\e[?2004l"
+    let &pastetoggle = "\e[201~"
+
+    function XTermPasteBegin(ret)
+        set paste
+        return a:ret
+    endfunction
+
+    inoremap <special> <expr> <Esc>[200~ XTermPasteBegin("")
+endif
+
+"見た目系
+" 検索結果のハイライトを表示
+set hlsearch
+" シンタックスハイライトを有効にする
+syntax on
+" 行番号を表示
+set number
+" 現在の行を強調表示
+set cursorline
+" 現在の行を強調表示（縦）
+"set cursorcolumn
+" ルーラーを表示
+set ruler
+" コメント文の色を変更
+highlight Comment ctermfg=DarkCyan
+" 行末の1文字先までカーソルを移動できるように
+set virtualedit=onemore
+" インデントはスマートインデント
+set smartindent
+" ビープ音を可視化
+"set visualbell
+" 括弧入力時の対応する括弧を表示
+set showmatch
+" ステータスラインを常に表示
+set laststatus=2
+" コマンドラインの補完
+set wildmode=list:longest
+" 折り返し時に表示行単位での移動を出来るようにする
+nnoremap j gj
+nnoremap k gk
+" 全角スペースの表示
+highlight ZenkakuSpace cterm=underline ctermfg=lightblue guibg=darkgray
+match ZenkakuSpace /　/
+
+" Tab系
+" 不可視文字を可視化（タブが[▶︎-]と表示される）
+set list listchars=tab:\▸\-
+" Tab文字を半角スペースにする
+set expandtab
+" 行頭以外のTab文字の表示幅（スペースいくつ分）
+set tabstop=2
+" 行頭でのTab文字の表示幅
+set shiftwidth=2
+
+" 検索系
+" 検索文字列が小文字の場合は大文字小文字を区別なく検索する
+set ignorecase
+" 検索文字列に大文字が含まれている場合は区別して検索する
+set smartcase
+" 検索文字列入力時に順次対象文字列にヒットさせる
+set incsearch
+" 検索時に最後まで行ったら最初に戻る
+set wrapscan
+" 検索語をハイライト表示
+set hlsearch
+" ESC連打でハイライト解除
+nmap <Esc><Esc> :nohlsearch<CR><Esc>
+"===========================================
+"キーマッピング
+"===========================================
+inoremap <C-c> <Esc>    "Esc押しづらいので入れておく
+noremap <S-h> ^     "S-hで左端へ
+noremap <S-l> $     "S-lで右端へ
+inoremap <silent> jj <ESC> "インサートモードのescをjjにする
+"インサートモードでも移動
+inoremap <C-j>  <down>
+inoremap <C-k>  <up>
+inoremap <C-h>  <left>
+inoremap <C-l>  <right>
+
+"括弧の補完
+inoremap { {}<Left>
+inoremap {<Enter> {}<Left><CR><ESC><S-o>
+inoremap ( ()<ESC>i
+inoremap (<Enter> ()<Left><CR><ESC><S-o>
+inoremap ' ''<LEFT>
+inoremap " ""<LEFT>
+
+nnoremap == gg=G    "=を二回連続入力でバッファ全体をインデント整理
+""""""""""""""""""""""""""""""
+" プラグインのセットアップ
+""""""""""""""""""""""""""""""
+"dein Scripts-----------------------------
+if &compatible
+  set nocompatible               " Be iMproved
+endif
+
+let s:dein_path = expand('~/.cache/dein')
+let s:dein_repo_path = s:dein_path . '/repos/github.com/Shougo/dein.vim'
+
+" dein.vim が無ければ github からclone
+if &runtimepath !~# '/dein.vim'
+  if !isdirectory(s:dein_repo_path)
+    execute '!git clone https://github.com/Shougo/dein.vim' s:dein_repo_path
+  endif
+  execute 'set runtimepath^=' . fnamemodify(s:dein_repo_path, ':p')
+endif
+
+if dein#load_state(s:dein_path)
+  call dein#begin(s:dein_path)
+
+  let g:config_dir = expand('~/.cache/dein/userconfig')
+  let s:toml       = g:config_dir . '/plugins.toml'
+  let s:lazy_toml  = g:config_dir . '/plugins_lazy.toml'
+
+  "プラグインを.cache/dein/userconfigにおいてあるplugins.tomlから読み込むよ
+  
+  call dein#load_toml(s:toml,      {'lazy': 0})
+  call dein#load_toml(s:lazy_toml, {'lazy': 1})
+  " Add or remove your plugins here like this:
+  "call dein#add('Shougo/neosnippet.vim')
+  "call dein#add('Shougo/neosnippet-snippets')
+
+  call dein#end()
+  call dein#save_state()
+endif
+
+" Required:
+filetype plugin indent on
+syntax enable
+
+" If you want to install not installed plugins on startup.
+if dein#check_install()
+  call dein#install()
+endif
+
+"End dein Scripts-------------------------
+
+"""""""""""""""""""""""""""""""""""""""""""
+""        スニペットファイルについて
+"""""""""""""""""""""""""""""""""""""""""""
+" スニペットファイルの場所指定
+let g:neosnippet#snippets_directory='~/.cache/snippets/'
+
+
+" ファイル名で区別出来る場合は直接呼び出し
+" ファイル名で区別できない場合は一旦関数に投げる
+augroup filetypedetect
+  autocmd!  BufEnter *_spec.rb NeoSnippetSource ~/.cache/snippets/rspec.snip
+  autocmd!  BufEnter *rb call s:LoadRailsSnippet()
+augroup END
+
+" rails用スニペット呼び出し関数
+function! s:LoadRailsSnippet()
+
+  " カレントディレクトリのディレクトリパス（絶対パス）取得
+  let s:current_file_path = expand("%:p:h")
+
+  " appフォルダ内でなければ無視
+  if ( s:current_file_path !~ "app/" )
+    return
+
+  " app/modelsフォルダ内ならば
+  elseif ( s:current_file_path =~ "app/models" )
+    NeoSnippetSource ~/.cache/snippets/model.rails.snip
+
+  " app/controllersフォルダ内ならば
+  elseif ( s:current_file_path =~ "app/controllers" )
+   NeoSnippetSource ~/.cache/snippets/controller.rails.snip
+
+  " app/viewsフォルダ内ならば
+  elseif ( s:current_file_path =~ "app/views" )
+    NeoSnippetSource ~/.cache/snippets/view.rails.snip
+
+  " app/helpersフォルダ内ならば
+  elseif ( s:current_file_path =~ "app/helpers" )
+    NeoSnippetSource ~/.cache/snippets/helper.rails.snip
+
+  " app/assetsフォルダ内ならば
+  elseif ( s:current_file_path =~ "app/assets" )
+    NeoSnippetSource ~/.cache/snippets/asset.rails.snip
+  endif
+endfunction
+
+""""""""""""""""""""""""""""""""""""""""""
+"          neo snippetの設定             "
+""""""""""""""""""""""""""""""""""""""""""
+imap <C-k> <Plug>(neosnippet_expand_or_jump)
+smap <C-k> <Plug>(neosnippet_expand_or_jump)
+xmap <C-k> <Plug>(neosnippet_expand_target)
+
+imap <expr><TAB>
+ \ pumvisible() ? "\<C-n>" :
+ \ neosnippet#expandable_or_jumpable() ?
+ \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
+\ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
+
+""""""""""""""""""""""""""""""""""""""""""
+"           neo completeの設定           "
+""""""""""""""""""""""""""""""""""""""""""
+"vim起動時にneocompleteを有効にする"
+let g:neocomplete#enable_at_startup = 1
+"smartcaseを有効化→大文字が入力されるまで大文字小文字の区別を無視する"
+let g:neocomplete#enable_smart_case = 1
+"3文字以上の単語に対して補完を有効にする"
+let g:neocomplete#min_keyword_length = 3
+"区切り文字まで補完する"
+let g:neocomplete#enable_auto_delimiter = 1
+"1文字目の入力から補完のポップアップを表示"
+let g:neocomplete#auto_completion_start_length = 1
+"バックスペースで補完のポップアップを閉じる"
+inoremap <expr><BS> neocomplete#smart_close_popup()."<C-h>"
+
+"エンターキーで補完候補の確定.スニペットの展開もエンターキーで確定"
+imap <expr><CR> neosnippet#expandable() ? "<Plug>(neosmippet_expand_or_jump)" : pumvisible() ? "<C-y>" : "<CR>"
+"タブキーで補完候補の選択、スニペット内のジャンプもタブキーでジャンプ"
+imap <expr><TAB> pumvisible() ? "<C-n>" : neosnippet#jumpable() ? "<Plug>(neosnippet_expand_or_jump)" : "<TAB>"
+""""""""""""""""""""""""""""""""""""""""""""
+"              CtrlPの設定　　　　　　　　 "
+"""""""""""""""""""""""""""""""""""""""""""""
+"マッチウィンドウの設定"
+let g:ctrlp_match_window = 'order:ttb,min:20,results:100' 
+".(ドット)から始まるファイルも検索対象"
+let g:ctrlp_show_hidden = 1
+"ファイル検索のみ使用"
+let g:ctrlp_types = ['fil']
+"ctrlpの拡張として「funky」と「commandline」を使用"
+let g:ctrl_extensions = ['funky', 'commandline']
+"CtrlPCommandLineの有効化"
+command! CtrlPCommandLine call ctrlp#init(ctrlp#commandline#id())
+"CtrlPFunkyの有効化"
+let g:ctrlp_funky_matchtype = 'path'
